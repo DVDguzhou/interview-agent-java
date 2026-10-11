@@ -1,4 +1,4 @@
-.PHONY: run build test infra-up infra-down clean package
+.PHONY: run build test infra-up infra-down infra-status clean package docker-build docker-run deploy ml-test ml-etl
 
 # 运行项目
 run:
@@ -16,17 +16,17 @@ package:
 test:
 	mvn test
 
-# 启动基础设施（Milvus + Redis + MySQL）
+# 启动基础设施（Milvus + Redis + PostgreSQL）
 infra-up:
-	docker-compose up -d
+	docker compose up -d
 
 # 停止基础设施
 infra-down:
-	docker-compose down
+	docker compose down
 
 # 查看基础设施状态
 infra-status:
-	docker-compose ps
+	docker compose ps
 
 # Docker 构建
 docker-build:
@@ -39,3 +39,14 @@ docker-run:
 # 清理编译产物
 clean:
 	mvn clean
+
+# 全栈部署（后端 + ML 服务 + 前端 + Nginx）
+deploy:
+	docker compose --profile app up -d --build
+
+# ML 子项目：测试 / 题库 ETL
+ml-test:
+	cd ml && uv run pytest
+
+ml-etl:
+	cd ml && uv run iml-etl --input ../data/questions --owner $${OWNER:-public}

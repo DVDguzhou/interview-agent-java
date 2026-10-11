@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -92,8 +88,22 @@ public class ResumeMatcher {
     }
 
     private String formatResumeForMatching(Resume resume) {
+        boolean hasStructured = resume.getSkills() != null && !resume.getSkills().isEmpty();
         if (resume.getRawText() != null && !resume.getRawText().isEmpty()) {
-            return resume.getRawText();
+            if (!hasStructured) {
+                return resume.getRawText();
+            }
+            // 原文 + 结构化抽取结果（技能 / 项目），让匹配与出题更聚焦候选人真实技术栈
+            try {
+                Resume structured = Resume.builder()
+                        .name(resume.getName()).skills(resume.getSkills())
+                        .experience(resume.getExperience()).projects(resume.getProjects())
+                        .build();
+                return resume.getRawText() + "\n\n## 结构化解析结果\n"
+                        + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(structured);
+            } catch (Exception e) {
+                return resume.getRawText();
+            }
         }
         try {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resume);

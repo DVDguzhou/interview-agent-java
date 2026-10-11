@@ -1,13 +1,9 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.rag.eval;
 
 import java.util.*;
 
 /**
- * 检索评估指标计算工具（与 Go 版本 evaluation_metrics.go 的指标函数一致）。
+ * 检索评估指标计算工具。
  *
  * 指标定义：
  * - Recall@K = |Top-K ∩ Relevant| / |Relevant|

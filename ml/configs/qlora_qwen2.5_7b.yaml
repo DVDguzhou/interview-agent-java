@@ -1,0 +1,20 @@
+# QLoRA 微调评分模型：Qwen2.5-7B-Instruct，4-bit NF4 + LoRA(r=16)
+base_model: Qwen/Qwen2.5-7B-Instruct
+train_file: build/sft/train.jsonl
+val_file: build/sft/val.jsonl
+output_dir: build/qlora-scorer
+max_seq_len: 2048
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+learning_rate: 2.0e-4
+num_train_epochs: 3
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 2
+gradient_accumulation_steps: 8
+warmup_ratio: 0.03
+lr_scheduler_type: cosine
+logging_steps: 10
+eval_steps: 100
+save_steps: 100
+seed: 42

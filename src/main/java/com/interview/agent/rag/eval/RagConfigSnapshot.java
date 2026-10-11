@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.rag.eval;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 评估时的 RAG 配置快照（用于 A/B 对比时回溯当时的参数），与 Go 版本 RAGConfig 一致。
+ * 评估时的 RAG 配置快照（用于 A/B 对比时回溯当时的参数）。
  *
  * 跑评估时把当前 RAG 流水线的关键参数记到这里，写入报告。
  * 比较两份报告时，从这个字段就能看出"两次实验的参数差异在哪"。

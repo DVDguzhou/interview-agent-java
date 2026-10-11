@@ -1,10 +1,7 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.interview.agent.ml.MlServiceClient;
 import com.interview.agent.model.AnswerScore;
 import com.interview.agent.model.InterviewState;
 import com.interview.agent.model.PlannedQuestion;
@@ -30,6 +27,7 @@ import java.util.stream.Collectors;
 public class Interviewer {
 
     private final ChatModel chatModel;
+    private final MlServiceClient mlServiceClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String INTERVIEWER_SYSTEM_PROMPT = """
@@ -116,7 +114,7 @@ public class Interviewer {
         List<Message> messages = new ArrayList<>();
         messages.add(new SystemMessage(systemPrompt));
 
-        // 与 Go 版本一致：直接提出题库原题、保持简洁，不要让模型加铺垫或改写。
+        // 直接提出题库原题、保持简洁，不要让模型加铺垫或改写。
         // 也不再塞入历史问答（每题独立、干净地提出），避免模型被上下文诱导加承接语。
         // （之前的「可以适当改写使其更自然」会让模型加上「好的，我们进入下一个问题」「（稍作停顿）」
         //   等大量啰嗦的承接语和铺垫，既不像题库原题，也会让第一题看起来像在承接上一题。）
@@ -130,10 +128,19 @@ public class Interviewer {
     }
 
     /**
-     * 评分
+     * 评分：优先使用 QLoRA 微调评分模型（ML 服务），不可用时降级到通用大模型
      */
     public AnswerScore scoreAnswer(PlannedQuestion question, String answer) {
         String reference = question.getReference() != null ? question.getReference() : "无参考答案";
+        if (mlServiceClient != null) {
+            AnswerScore fineTuned = mlServiceClient.score(question.getContent(), answer, reference).orElse(null);
+            if (fineTuned != null) {
+                fineTuned.setScore(Math.max(0, Math.min(100, fineTuned.getScore())));
+                if (fineTuned.getKeyPointsHit() == null) fineTuned.setKeyPointsHit(List.of());
+                if (fineTuned.getKeyPointsMissed() == null) fineTuned.setKeyPointsMissed(List.of());
+                return fineTuned;
+            }
+        }
         String userMsg = String.format(SCORE_PROMPT, question.getContent(), answer, reference);
 
         Prompt prompt = new Prompt(List.of(

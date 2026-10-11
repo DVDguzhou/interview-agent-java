@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.auth;
 
 import lombok.Data;
@@ -15,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * 注册登录 Controller（与 Go 版本 auth/handler.go 路径和响应格式一致）
+ * 注册登录 Controller
  * POST /api/register
  * POST /api/login
  */

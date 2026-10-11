@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.loader;
 
 import com.interview.agent.mcp.WebScraperTool;
@@ -12,7 +8,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 
 /**
- * 网页内容加载器（与 Go 版本一致）
+ * 网页内容加载器
  * - 通过 HTTP 抓取网页
  * - 用 LLM 从网页内容中提取 JD 正文
  */

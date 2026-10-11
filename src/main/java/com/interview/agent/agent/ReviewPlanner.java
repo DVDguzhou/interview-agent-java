@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.agent;
 
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
@@ -145,7 +141,7 @@ public class ReviewPlanner {
     }
 
     /**
-     * 格式化复习计划为 Markdown（与 Go 版本 FormatReviewPlan 对齐）
+     * 格式化复习计划为 Markdown
      */
     public static String formatReviewPlan(ReviewPlan plan) {
         StringBuilder sb = new StringBuilder();

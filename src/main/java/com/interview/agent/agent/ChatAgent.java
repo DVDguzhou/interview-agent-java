@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.agent;
 
 import lombok.RequiredArgsConstructor;
@@ -13,9 +9,11 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -24,8 +22,8 @@ public class ChatAgent {
 
     private final ChatModel chatModel;
 
-    /** 聊天历史上限：20 条消息（10 轮对话），与 Go 版本一致 */
-    private static final int MAX_HISTORY_SIZE = 20;
+    /** 聊天历史上限：20 条消息（10 轮对话） */
+    public static final int MAX_HISTORY_SIZE = 20;
 
     private static final String CHAT_AGENT_PROMPT = """
             你是 InterviewAgent 系统的智能助手，一个专注于技术面试的 AI 伙伴。
@@ -56,6 +54,21 @@ public class ChatAgent {
      * 聊天：维护历史上下文，限制最近 20 条消息
      */
     public String chat(List<Message> history, String userInput) {
+        ChatResponse response = chatModel.call(buildPrompt(history, userInput));
+        return response.getResult().getOutput().getText();
+    }
+
+    /**
+     * 流式聊天：逐段返回模型增量输出（供 SSE 接口推送）
+     */
+    public Flux<String> stream(List<Message> history, String userInput) {
+        return chatModel.stream(buildPrompt(history, userInput))
+                .map(r -> r.getResult() != null && r.getResult().getOutput() != null
+                        ? Objects.requireNonNullElse(r.getResult().getOutput().getText(), "") : "")
+                .filter(s -> !s.isEmpty());
+    }
+
+    private Prompt buildPrompt(List<Message> history, String userInput) {
         List<Message> messages = new ArrayList<>();
         messages.add(new SystemMessage(CHAT_AGENT_PROMPT));
 
@@ -66,8 +79,6 @@ public class ChatAgent {
         }
 
         messages.add(new UserMessage(userInput));
-
-        ChatResponse response = chatModel.call(new Prompt(messages));
-        return response.getResult().getOutput().getText();
+        return new Prompt(messages);
     }
 }

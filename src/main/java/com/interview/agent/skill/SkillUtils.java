@@ -1,13 +1,9 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.skill;
 
 import java.util.List;
 
 /**
- * Skill 工具方法（与 Go 版本一致）
+ * Skill 工具方法
  */
 public class SkillUtils {
 

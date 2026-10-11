@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.skill;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -18,7 +14,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import java.util.*;
 
 /**
- * 概念精讲技能（与 Go 版本一致）
+ * 概念精讲技能
  * - 将知识点拆解为多个关键点
  * - 逐个讲解，结合 RAG 知识库
  * - 三阶段：start → teaching → conclusion

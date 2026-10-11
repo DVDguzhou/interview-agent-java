@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.skill;
 
 import org.springframework.stereotype.Component;
@@ -10,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Skill 注册中心（与 Go 版本一致）
+ * Skill 注册中心
  * 管理所有已注册的 Skill 并提供意图匹配，先注册的优先级高
  */
 @Component

@@ -28,19 +28,21 @@ spring:
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DB:0}
 
-  # MySQL / JPA
+  # PostgreSQL / JPA
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/interview_agent?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai}
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:interview}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${PG_URL:jdbc:postgresql://localhost:5432/interview_agent}
+    username: ${PG_USERNAME:interview}
+    password: ${PG_PASSWORD:interview}
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      continue-on-error: false
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
 
 # Application Custom Config
 app:
@@ -60,3 +62,9 @@ app:
       type: ${RERANKER_TYPE:cross-encoder}
       # cross-encoder 使用的 DashScope 重排模型；gte-rerank-v2 为当前可用版本
       cross-encoder-model: ${RERANK_MODEL:gte-rerank-v2}
+  # Python ML 服务（ml/）：LlamaIndex 简历解析 + QLoRA 微调评分模型；未配置 base-url 时自动降级为纯 LLM 链路
+  ml:
+    base-url: ${ML_SERVICE_URL:}
+    timeout-seconds: ${ML_SERVICE_TIMEOUT:60}
+    resume-parser-enabled: ${ML_RESUME_PARSER_ENABLED:true}
+    scorer-enabled: ${ML_SCORER_ENABLED:false}

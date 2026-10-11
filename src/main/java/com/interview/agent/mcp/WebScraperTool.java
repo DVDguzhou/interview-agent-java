@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.mcp;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +11,8 @@ import java.time.Duration;
 
 /**
  * 网页抓取 MCP 工具：用于抓取 JD 链接等网页内容。
- * 与 Go 版本 mcp/web_scraper.go 功能一致。
  *
- * 注意：Go 版本通过 Playwright MCP Server（stdio）抓取 JS 渲染页面。
- * Java 版本使用 HttpClient 进行基础抓取，对于需要 JS 渲染的页面建议用户直接粘贴内容。
+ * 注意：使用 HttpClient 进行基础抓取，对于需要 JS 渲染的页面建议用户直接粘贴内容。
  */
 @Slf4j
 @Component

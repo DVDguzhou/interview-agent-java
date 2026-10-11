@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.skill;
 
 import com.interview.agent.rag.BM25Manager;
@@ -15,7 +11,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import java.util.*;
 
 /**
- * 技术对比技能（与 Go 版本一致）
+ * 技术对比技能
  * - 两阶段：start → advising
  * - 表格对比 + 选型建议 + 面试话术
  */

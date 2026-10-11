@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.auth;
 
 import com.interview.agent.config.AppConfig;
@@ -17,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
- * JWT 认证服务（与 Go 版本 auth/auth.go 逻辑一致）
+ * JWT 认证服务
  */
 @Slf4j
 @Service

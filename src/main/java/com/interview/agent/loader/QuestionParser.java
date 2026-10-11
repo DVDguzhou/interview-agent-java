@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.loader;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -21,7 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 题库解析器：使用 LLM 将非结构化题库文本解析为结构化题目（与 Go 版本一致）
+ * 题库解析器：使用 LLM 将非结构化题库文本解析为结构化题目
  * - 超过 maxSegmentLen 的文本按段落边界分段，逐段调用 LLM
  * - 校验题目字段合法性
  */
@@ -29,7 +25,7 @@ import java.util.stream.Collectors;
 @Component
 public class QuestionParser {
 
-    // 单段最大字符数：Go 版用 25000（其 HTTP 客户端无超时、可硬扛），但 qwen-plus 对超大单段
+    // 单段最大字符数：qwen-plus 对超大单段（如 25000 字符）
     // 会生成超长 JSON（单次 >10 分钟），在有超时的 Java 客户端下必然超时。调小到 8000 后每段题目
     // 更少、LLM 输出更短（单次几十秒），解析结果一致、只是分更多段。可用环境变量覆盖。
     private static final int MAX_SEGMENT_LEN =

@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.loader;
 
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +9,7 @@ import java.nio.file.Path;
 import java.util.Base64;
 
 /**
- * 文档加载器：根据文件扩展名自动选择解析器（与 Go 版本一致）
+ * 文档加载器：根据文件扩展名自动选择解析器
  * 支持 PDF / TXT / DOCX / Markdown
  */
 @Slf4j

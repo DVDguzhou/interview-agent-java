@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.graph;
 
 import com.interview.agent.model.AnswerScore;
@@ -11,7 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * 面试过程回调（与 Go 版本一致）
+ * 面试过程回调
  */
 public interface InterviewCallbacks {
 

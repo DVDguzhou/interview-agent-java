@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.agent;
 
 /**
@@ -12,7 +8,6 @@ public class AgentUtils {
     /**
      * 从 LLM 响应文本中提取 JSON 内容。
      * 处理 markdown 代码块包裹的情况，提取第一个 { 到最后一个 } 之间的内容。
-     * 与 Go 版本 extractJSON() 逻辑完全一致。
      */
     public static String extractJSON(String text) {
         if (text == null || text.isEmpty()) {
@@ -44,5 +39,22 @@ public class AgentUtils {
         }
 
         return text.substring(start, end);
+    }
+
+    /**
+     * 从 LLM 响应文本中提取 JSON 数组（第一个 [ 到最后一个 ]）；
+     * 若模型返回 {"questions": [...]} 之类的包裹对象，则回退到对象提取，由调用方处理。
+     */
+    public static String extractJSONArray(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        int start = text.indexOf('[');
+        int end = text.lastIndexOf(']');
+        int objStart = text.indexOf('{');
+        if (start == -1 || end <= start || (objStart != -1 && objStart < start)) {
+            return extractJSON(text);
+        }
+        return text.substring(start, end + 1);
     }
 }

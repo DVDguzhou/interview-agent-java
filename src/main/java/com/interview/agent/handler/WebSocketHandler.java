@@ -1,37 +1,31 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.interview.agent.agent.*;
 import com.interview.agent.auth.JwtService;
+import com.interview.agent.chat.ChatDispatcher;
 import com.interview.agent.graph.*;
 import com.interview.agent.loader.*;
 import com.interview.agent.memory.*;
 import com.interview.agent.model.*;
 import com.interview.agent.rag.*;
-import com.interview.agent.skill.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * WebSocket 处理器（与 Go 版本 ws_handler.go 完全一致的协议和逻辑）
- * - handleChat：3 级优先级（active skill → skill match → ChatAgent）
+ * WebSocket 处理器
+ * - handleChat：委托 ChatDispatcher（active skill → skill match → ChatAgent）
  * - handleStartInterview：创建 Orchestrator，异步运行面试
  * - handleAnswer：通过 answerCh 传递用户回答
- * - handleUploadQuestions：base64 解码 → SHA256 去重 → LLM 解析 → Milvus + BM25
+ * - handleUploadQuestions：base64 解码 → SHA256 去重 → LLM 解析 → PostgreSQL 题库 + Milvus + BM25
  * - handleQuitInterview：用户主动终止
  */
 @Slf4j
@@ -41,17 +35,15 @@ public class WebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private final Orchestrator orchestrator;
-    private final ChatAgent chatAgent;
-    private final IntentRouter intentRouter;
-    private final SkillRegistry skillRegistry;
+    private final ChatDispatcher chatDispatcher;
     private final DocumentLoader documentLoader;
     private final QuestionParser questionParser;
     private final WebLoader webLoader;
     private final MilvusStore milvusStore;
     private final BM25Manager bm25Manager;
     private final RedisStore redisStore;
+    private final QuestionBankStore questionBankStore;
     private final JwtService jwtService;
-    private final ChatModel chatModel;
 
     /** session 管理 */
     private final Map<String, WSSession> sessions = new ConcurrentHashMap<>();
@@ -68,33 +60,28 @@ public class WebSocketHandler extends TextWebSocketHandler {
         return t;
     });
 
-    public WebSocketHandler(Orchestrator orchestrator, ChatAgent chatAgent,
-                            IntentRouter intentRouter, SkillRegistry skillRegistry,
+    public WebSocketHandler(Orchestrator orchestrator, ChatDispatcher chatDispatcher,
                             DocumentLoader documentLoader, QuestionParser questionParser,
                             WebLoader webLoader, MilvusStore milvusStore,
                             BM25Manager bm25Manager, RedisStore redisStore,
-                            JwtService jwtService, ChatModel chatModel) {
+                            QuestionBankStore questionBankStore, JwtService jwtService) {
         this.orchestrator = orchestrator;
-        this.chatAgent = chatAgent;
-        this.intentRouter = intentRouter;
-        this.skillRegistry = skillRegistry;
+        this.chatDispatcher = chatDispatcher;
         this.documentLoader = documentLoader;
         this.questionParser = questionParser;
         this.webLoader = webLoader;
         this.milvusStore = milvusStore;
         this.bm25Manager = bm25Manager;
         this.redisStore = redisStore;
+        this.questionBankStore = questionBankStore;
         this.jwtService = jwtService;
-        this.chatModel = chatModel;
     }
 
     /** WebSocket 会话状态 */
     private static class WSSession {
         WebSocketSession conn;
         String userID;
-        List<org.springframework.ai.chat.messages.Message> chatHistory = new ArrayList<>();
-        Skill activeSkill;
-        SkillState skillState;
+        ChatDispatcher.Conversation conversation;
         BlockingQueue<String> answerCh = new LinkedBlockingQueue<>();
         volatile boolean interviewRunning = false;
     }
@@ -125,6 +112,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         WSSession ws = new WSSession();
         ws.conn = session;
         ws.userID = userID;
+        ws.conversation = new ChatDispatcher.Conversation(userID);
         sessions.put(session.getId(), ws);
 
         log.info("[WS] 用户 {} 已连接 (sessionId={})", userID, session.getId());
@@ -163,60 +151,11 @@ public class WebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * 聊天消息处理：3 级优先级
-     * 1. 已激活的 Skill 继续处理
-     * 2. SkillRegistry 匹配新 Skill
-     * 3. ChatAgent 兜底
+     * 聊天消息处理：Skill 优先、ChatAgent 兜底（见 {@link ChatDispatcher}）
      */
     private void handleChat(WSSession ws, ClientMsg msg) {
         String input = resolveInput(msg.getContent() != null ? msg.getContent() : "");
-
-        // 优先级 1：已激活的 Skill
-        if (ws.activeSkill != null) {
-            if (SkillUtils.isQuitCommand(input) || (ws.skillState != null && ws.skillState.isExpired())) {
-                ws.activeSkill = null;
-                ws.skillState = null;
-                sendServerMsg(ws.conn, ServerMsg.builder().type("chat_reply").content("已退出技能模式。").build());
-                return;
-            }
-
-            // 增强（Go 版本无）：技能会话进行中，若用户又发出明确的新技能/新测验意图
-            // （例如测验做到一半再说「来几道 mysql 面试题」），则结束当前会话、切换到新技能，
-            // 而不是把这句话当成当前题目的回答。普通的答题内容不含触发词，不会被误切。
-            if (skillRegistry.match(input) == null) {
-                SkillResponse resp = ws.activeSkill.handle(input, ws.skillState);
-                ws.skillState = resp.getState();
-                if (resp.isDone()) {
-                    ws.activeSkill = null;
-                    ws.skillState = null;
-                }
-                sendServerMsg(ws.conn, ServerMsg.builder().type("chat_reply").content(resp.getContent()).build());
-                return;
-            }
-            // 命中新的技能意图：清空当前会话，落到下方「优先级 2」开启新技能
-            ws.activeSkill = null;
-            ws.skillState = null;
-        }
-
-        // 优先级 2：匹配新 Skill
-        Skill matched = skillRegistry.match(input);
-        if (matched != null) {
-            ws.activeSkill = matched;
-            ws.skillState = SkillState.create(matched.name());
-            ws.skillState.setUserId(ws.userID);
-
-            SkillResponse resp = matched.handle(input, ws.skillState);
-            ws.skillState = resp.getState();
-            if (resp.isDone()) {
-                ws.activeSkill = null;
-                ws.skillState = null;
-            }
-            sendServerMsg(ws.conn, ServerMsg.builder().type("chat_reply").content(resp.getContent()).build());
-            return;
-        }
-
-        // 优先级 3：ChatAgent 兜底
-        String reply = chatAgent.chat(ws.chatHistory, input);
+        String reply = chatDispatcher.chat(ws.conversation, input);
         sendServerMsg(ws.conn, ServerMsg.builder().type("chat_reply").content(reply).build());
     }
 
@@ -237,7 +176,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        // 解析 JD / 简历输入：支持 [FILE:] 文件、URL 抓取、纯文本（与 Go resolveInput 一致）
+        // 解析 JD / 简历输入：支持 [FILE:] 文件、URL 抓取、纯文本
         jdText = resolveInput(jdText);
         resumeText = resolveInput(resumeText);
 
@@ -301,7 +240,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 sendServerMsg(ws.conn, ServerMsg.builder()
                         .type("error").message("面试流程异常: " + e.getMessage()).build());
             } finally {
-                // 与 Go 版本一致：面试流程结束后（无论正常完成、用户终止或异常）都通知前端
+                // 面试流程结束后（无论正常完成、用户终止或异常）都通知前端
                 sendServerMsg(ws.conn, ServerMsg.builder().type("interview_complete").build());
                 ws.interviewRunning = false;
             }
@@ -385,14 +324,20 @@ public class WebSocketHandler extends TextWebSocketHandler {
                         .toList();
                 milvusStore.loadParsedQuestions(ws.userID, filename, milvusQuestions);
 
-                // 写入 BM25
-                List<RagDocument> bm25Docs = result.getQuestions().stream()
-                        .map(q -> RagDocument.builder()
+                // 写入 PostgreSQL 题库并重建该用户 BM25 索引（同名文件重传会覆盖旧题）
+                questionBankStore.replaceSourceFile(ws.userID, filename, result.getQuestions().stream()
+                        .map(q -> QuestionBankStore.QuestionRow.builder()
                                 .id(q.getId())
-                                .content(q.getContent() + "\n参考答案：" + q.getReference())
+                                .ownerId(ws.userID)
+                                .sourceFile(filename)
+                                .question(q.getContent())
+                                .referenceAnswer(q.getReference())
+                                .questionType(q.getType())
+                                .difficulty(q.getDifficulty())
+                                .knowledgePoints(q.getSkills())
                                 .build())
-                        .toList();
-                bm25Manager.appendDocuments(ws.userID, bm25Docs);
+                        .toList());
+                bm25Manager.reload(ws.userID);
 
                 // 保存文件 hash
                 redisStore.saveFileHash(ws.userID, filename, hash);
@@ -469,7 +414,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    /** 格式化题库解析的校验失败详情（与 Go formatParseErrors 一致），无错误返回 null（NON_NULL 不序列化） */
+    /** 格式化题库解析的校验失败详情，无错误返回 null（NON_NULL 不序列化） */
     private String formatParseErrors(List<QuestionParser.ParseError> errs) {
         if (errs == null || errs.isEmpty()) return null;
         StringBuilder sb = new StringBuilder();

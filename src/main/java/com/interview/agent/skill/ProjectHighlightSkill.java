@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.skill;
 
 import com.interview.agent.agent.AgentUtils;
@@ -13,7 +9,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import java.util.*;
 
 /**
- * 项目亮点提炼技能（与 Go 版本一致）
+ * 项目亮点提炼技能
  * - 三阶段：start → collecting → mock_interview
  * - STAR 法则重构 + 亮点提炼 + 模拟追问
  */

@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.skill;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -20,7 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 快速测验技能（与 Go 版本一致）
+ * 快速测验技能
  * - 解析主题与题数（默认 5 道，支持「来5道Redis题」，范围 1~10）
  * - RAG 检索题目，不足部分用 LLM 补齐
  * - 逐题作答评分（含命中/遗漏要点）
@@ -295,8 +291,15 @@ public class QuickQuizSkill implements Skill {
 
         try {
             ChatResponse response = chatModel.call(new Prompt(prompt));
-            String json = AgentUtils.extractJSON(response.getResult().getOutput().getText());
-            List<Map<String, Object>> list = objectMapper.readValue(json, new TypeReference<>() {});
+            String json = AgentUtils.extractJSONArray(response.getResult().getOutput().getText());
+            com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(json);
+            if (node.isObject()) {
+                // 兼容 {"questions": [...]} 形式的包裹输出：取第一个数组字段
+                node = java.util.stream.StreamSupport.stream(node.spliterator(), false)
+                        .filter(com.fasterxml.jackson.databind.JsonNode::isArray).findFirst()
+                        .orElseThrow(() -> new IllegalStateException("LLM 未返回题目数组"));
+            }
+            List<Map<String, Object>> list = objectMapper.convertValue(node, new TypeReference<>() {});
             // 兜底：确保每题带 difficulty
             for (Map<String, Object> q : list) {
                 q.putIfAbsent("difficulty", "medium");

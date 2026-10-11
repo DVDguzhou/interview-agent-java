@@ -1,5 +1,7 @@
+# 国内网络可传 --build-arg BASE_REGISTRY=docker.m.daocloud.io/library/
+ARG BASE_REGISTRY=
 # ---- Build Stage ----
-FROM maven:3.9-eclipse-temurin-21 AS builder
+FROM ${BASE_REGISTRY}maven:3.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
@@ -12,7 +14,7 @@ COPY src ./src
 RUN mvn package -DskipTests -B
 
 # ---- Runtime Stage ----
-FROM eclipse-temurin:21-jre-alpine
+FROM ${BASE_REGISTRY}eclipse-temurin:21-jre-alpine
 
 RUN apk add --no-cache ca-certificates tzdata
 

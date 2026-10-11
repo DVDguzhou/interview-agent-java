@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.memory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 /**
- * Redis 存储层（与 Go 版本 key 模式一致）
+ * Redis 存储层
  * - Profile: interview:profile:{userID}
  * - Session: interview:session:{sessionID}
  * - File hash: interview:file_hash:{userID}:{filename}

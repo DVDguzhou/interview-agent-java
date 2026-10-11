@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.rag;
 
 import org.springframework.stereotype.Component;
@@ -9,7 +5,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 /**
- * RRF（Reciprocal Rank Fusion）融合算法（与 Go 版本一致）
+ * RRF（Reciprocal Rank Fusion）融合算法
  * k = 60
  */
 @Component

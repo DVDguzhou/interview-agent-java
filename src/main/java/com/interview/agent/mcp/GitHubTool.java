@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.mcp;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,7 +16,6 @@ import java.net.http.HttpResponse;
 
 /**
  * GitHub MCP 工具：搜索 GitHub 仓库，用于复习计划推荐开源项目。
- * 与 Go 版本 mcp/github_tool.go 功能一致。
  */
 @Slf4j
 @Component

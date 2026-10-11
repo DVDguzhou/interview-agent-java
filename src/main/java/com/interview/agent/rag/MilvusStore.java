@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.rag;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Milvus 向量存储（与 Go 版本一致）
+ * Milvus 向量存储
  * - 集合名：interview_questions
  * - 向量维度：1024（text-embedding-v3）
  * - 支持按用户隔离检索、按来源文件删除

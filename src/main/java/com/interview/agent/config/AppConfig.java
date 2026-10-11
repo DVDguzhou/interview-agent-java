@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.config;
 
 import lombok.Data;
@@ -17,6 +13,16 @@ public class AppConfig {
     private JwtProperties jwt = new JwtProperties();
     private GitHubProperties github = new GitHubProperties();
     private AuthProperties auth = new AuthProperties();
+    private MlProperties ml = new MlProperties();
+
+    /** Python ML 服务（简历解析 / 微调评分模型），baseUrl 为空表示未部署 */
+    @Data
+    public static class MlProperties {
+        private String baseUrl = "";
+        private int timeoutSeconds = 60;
+        private boolean resumeParserEnabled = true;
+        private boolean scorerEnabled = false;
+    }
 
     @Data
     public static class MilvusProperties {

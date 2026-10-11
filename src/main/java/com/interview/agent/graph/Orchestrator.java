@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.graph;
 
 import com.alibaba.cloud.ai.graph.CompiledGraph;
@@ -10,10 +6,9 @@ import com.alibaba.cloud.ai.graph.KeyStrategyFactory;
 import com.alibaba.cloud.ai.graph.StateGraph;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
 import com.alibaba.cloud.ai.graph.state.strategy.ReplaceStrategy;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.interview.agent.agent.*;
 import com.interview.agent.memory.*;
+import com.interview.agent.ml.MlServiceClient;
 import com.interview.agent.model.*;
 import com.interview.agent.rag.*;
 import lombok.extern.slf4j.Slf4j;
@@ -59,15 +54,16 @@ public class Orchestrator {
     private final MilvusStore milvusStore;
     private final BM25Manager bm25Manager;
     private final Reranker reranker;
-    private final MySQLStore mysqlStore;
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final PostgresStore postgresStore;
+    private final MlServiceClient mlServiceClient;
 
     public Orchestrator(JDAnalyzer jdAnalyzer, ResumeMatcher resumeMatcher,
                         QuestionPlanner questionPlanner, Interviewer interviewer,
                         Evaluator evaluator, ReviewPlanner reviewPlanner,
                         ShortTermMemory shortTermMem, LongTermMemory longTermMem,
                         MilvusStore milvusStore, BM25Manager bm25Manager,
-                        Reranker reranker, MySQLStore mysqlStore) {
+                        Reranker reranker, PostgresStore postgresStore,
+                        MlServiceClient mlServiceClient) {
         this.jdAnalyzer = jdAnalyzer;
         this.resumeMatcher = resumeMatcher;
         this.questionPlanner = questionPlanner;
@@ -79,7 +75,8 @@ public class Orchestrator {
         this.milvusStore = milvusStore;
         this.bm25Manager = bm25Manager;
         this.reranker = reranker;
-        this.mysqlStore = mysqlStore;
+        this.postgresStore = postgresStore;
+        this.mlServiceClient = mlServiceClient;
     }
 
     /**
@@ -148,8 +145,13 @@ public class Orchestrator {
     private void resumeMatch(Ctx c) {
         c.cb.onStageChange("resume_match", "正在分析简历匹配度...");
 
-        c.resume = new Resume();
+        // 结构化简历解析（LlamaIndex + Prompt 抽取技能 / 项目），不可用时仅使用原文
+        c.resume = mlServiceClient.parseResume(c.resumeText).orElseGet(Resume::new);
         c.resume.setRawText(c.resumeText);
+        if (c.resume.getSkills() != null && !c.resume.getSkills().isEmpty()) {
+            c.cb.onStageChange("resume_parsed", String.format("简历结构化解析完成：识别 %d 项技能、%d 个项目",
+                    c.resume.getSkills().size(), c.resume.getProjects() != null ? c.resume.getProjects().size() : 0));
+        }
 
         c.matchResult = resumeMatcher.match(c.jdAnalysis, c.resume);
         c.session.setMatchResult(c.matchResult);
@@ -465,7 +467,7 @@ public class Orchestrator {
 
         c.userTerminated = userTerminated;
 
-        // 终止时设置 session 状态（与顺序版本一致）
+        // 终止时设置 session 状态
         if (userTerminated && state.getQaHistory().isEmpty()) {
             c.session.setStatus(Session.STATUS_TERMINATED);
             c.session.setUpdatedAt(LocalDateTime.now());
@@ -550,19 +552,13 @@ public class Orchestrator {
                 .date(LocalDateTime.now())
                 .build());
 
-        if (mysqlStore != null) {
-            try {
-                String reportJSON = objectMapper.writeValueAsString(c.report);
-                String planJSON = objectMapper.writeValueAsString(c.reviewPlan);
-                mysqlStore.saveInterviewRecord(c.userID, UserProfile.InterviewRecord.builder()
-                        .sessionId(c.session.getId())
-                        .position(c.jdAnalysis.getPosition())
-                        .overallScore(c.report.getOverallScore())
-                        .date(LocalDateTime.now())
-                        .build(), reportJSON, planJSON);
-            } catch (Exception e) {
-                log.warn("[Orchestrator] 保存面试记录到 MySQL 失败: {}", e.getMessage());
-            }
+        if (postgresStore != null) {
+            postgresStore.saveInterviewRecord(c.userID, UserProfile.InterviewRecord.builder()
+                    .sessionId(c.session.getId())
+                    .position(c.jdAnalysis.getPosition())
+                    .overallScore(c.report.getOverallScore())
+                    .date(LocalDateTime.now())
+                    .build(), c.report.getOverallLevel(), c.report, c.reviewPlan);
         }
 
         c.cb.onStageChange("completed", "面试流程全部完成！");
@@ -596,7 +592,7 @@ public class Orchestrator {
     }
 
     // ============================================================
-    // 辅助方法（与顺序版本一致）
+    // 辅助方法
     // ============================================================
 
     /** 构建低分题巩固内容 */

@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,8 +10,8 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * WebSocket 服务端消息，JSON 字段与 Go 版本完全一致。
- * 使用 NON_NULL 策略：空字段不序列化，与 Go 的 omitempty 对齐。
+ * WebSocket 服务端消息。
+ * 使用 NON_NULL 策略：空字段不序列化，减小消息体积。
  */
 @Data
 @Builder

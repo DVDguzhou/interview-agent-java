@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.rag.eval;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * 单条样本的评估结果，与 Go 版本 SampleResult 字段一致。
+ * 单条样本的评估结果。
  */
 @Data
 @Builder

@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.rag.eval;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -16,7 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * 评估报告渲染与落盘（与 Go 版本 eval_report.go 一致）。
+ * 评估报告渲染与落盘。
  * 输出 JSON（机器可读，A/B 对比）+ Markdown（人可读摘要）两种格式。
  */
 public final class EvalReportRenderer {

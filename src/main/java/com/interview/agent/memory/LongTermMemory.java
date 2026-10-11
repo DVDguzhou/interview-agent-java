@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.memory;
 
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * 长期记忆：管理用户画像和面试历史（与 Go 版本一致）
+ * 长期记忆：管理用户画像和面试历史
  * - 薄弱点超过 30 天自动淘汰
  * - 出题时只取最弱的 Top 10
  * - 得分 < 60 记录为薄弱点，得分 >= 80 移除薄弱点

@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.rag.eval;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * RAG 离线评估 CLI（与 Go 版本 cmd/eval.go 一致）。
+ * RAG 离线评估 CLI。
  *
  * <p>用法：以子命令 {@code eval} 启动应用，例如：
  * <pre>
@@ -331,7 +327,7 @@ public class EvalCommandRunner implements CommandLineRunner {
     }
 
     // ============================================================
-    // 辅助：数据集自动生成（与 Go 一致）
+    // 辅助：数据集自动生成
     // ============================================================
 
     /** 从 manifest 条目生成 SearchQuery 风格的查询（关键词组合，不是完整问句）。 */

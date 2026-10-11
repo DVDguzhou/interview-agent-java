@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.model;
 
 import lombok.AllArgsConstructor;
@@ -10,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * WebSocket 客户端消息，JSON 字段与 Go 版本完全一致。
+ * WebSocket 客户端消息。
  */
 @Data
 @Builder

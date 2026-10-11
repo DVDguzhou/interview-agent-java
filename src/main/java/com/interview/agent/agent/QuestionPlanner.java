@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -203,7 +199,7 @@ public class QuestionPlanner {
     }
 
     /**
-     * 动态难度调节算法（与 Go 版本完全一致）
+     * 动态难度调节算法
      * - 连续答对 ≥ 2 题 → 提高难度
      * - 连续答错 ≥ 2 题 → 降低难度
      * - 否则保持当前难度

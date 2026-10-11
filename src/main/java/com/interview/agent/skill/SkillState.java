@@ -1,7 +1,3 @@
-/**
- * @author: 公众号：IT杨秀才
- * @doc: AI模拟面试官 - Java版（Spring AI Alibaba）
- */
 package com.interview.agent.skill;
 
 import lombok.AllArgsConstructor;
@@ -15,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Skill 的交互状态（与 Go 版本一致）
+ * Skill 的交互状态
  */
 @Data
 @Builder
